@@ -1,7 +1,11 @@
 {
   "main": "electron/main.js",
   "name": "cyoa-json-downloader",
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Tool for downloading the project.json files of interactive cyoas with embedded images",
+  "keywords": ["ICC", "ICC+", "CYOA"],
+  "author": "blathers16",
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "ng": "ng",
     "start": "ng serve -o",
