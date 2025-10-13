@@ -1,0 +1,59 @@
+{
+  "main": "electron/main.js",
+  "name": "cyoa-json-downloader",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve -o",
+    "electron": "ng build --base-href . && electron .",
+    "electron:dev": "ng build  --base-href . --watch & electron .",
+    "build": "ng build",
+    "watch": "ng build --watch",
+    "serve": "npx http-server dist/avif-cyoa-compressor",
+    "test": "ng test"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^20.3.4",
+    "@angular/common": "^20.3.4",
+    "@angular/compiler": "^20.3.4",
+    "@angular/core": "^20.3.4",
+    "@angular/forms": "^20.3.4",
+    "@angular/platform-browser": "^20.3.4",
+    "@angular/platform-browser-dynamic": "^20.3.4",
+    "@ng-bootstrap/ng-bootstrap": "^19.0.1",
+    "@popperjs/core": "^2.11.8",
+    "base64-arraybuffer": "^1.0.2",
+    "bootstrap": "^5.3.3",
+    "observable-webworker": "^6.0.1",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.15.1"
+  },
+  "devDependencies": {
+    "@angular/build": "^20.3.5",
+    "@angular/cli": "^20.3.5",
+    "@angular/compiler-cli": "^20.3.4",
+    "@angular/localize": "^20.3.4",
+    "@types/jasmine": "~5.1.0",
+    "electron": "^38.2.2",
+    "jasmine-core": "~5.1.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "schematics-scss-migrate": "^2.3.17",
+    "typescript": "~5.8.3"
+  },
+  "build": {
+    "appId": "com.blath16.cyoajsondownloader",
+    "files": [
+      "dist/cyoa-json-downloader/browser/**/*",
+      "electron/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    }
+  }
+}

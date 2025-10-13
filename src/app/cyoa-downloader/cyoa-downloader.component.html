@@ -1,0 +1,93 @@
+<div class="container pt-4 h-100">
+  <div ngbAccordion>
+    <div ngbAccordionItem>
+      <h2 ngbAccordionHeader>
+        <button ngbAccordionButton>About this Program</button>
+      </h2>
+      <div ngbAccordionCollapse>
+        <div ngbAccordionBody>
+          <ng-template>
+            <h2>CYOA JSON Downloader</h2>
+            <p>
+              When pointed to the root of an interactive cyoa, this app downloads the project.json file,
+              fetches all images in the project.json, and embeds them in the project.json as data URLs.
+            </p>
+            <h4>Caveats</h4>
+            <ul>
+              <li>
+                only fetches images in an images folder as created by the intcyoa creator by default
+              </li>
+              <li>
+                only works if the json file is named project.json
+              </li>
+              <li>
+                if the images are already embedded, it will still download the json file, but won't do anything else
+              </li>
+            </ul>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="my-4">
+    <label for="cyoaURL" class="visually-hidden">URL to CYOA:</label>
+    <div class="input-group">
+      <div class="input-group-text">URL to CYOA:</div>
+      <input
+        type="text"
+        class="form-control"
+        id="cyoaURL"
+        [(ngModel)]="cyoaURL"
+      />
+    </div>
+  </div>
+
+  <div class="my-4">
+    <button type="submit" class="btn btn-primary" (click)="process()">Submit</button>
+  </div>
+
+  @if (inProgress) {
+  <ngb-progressbar
+    class="mb-3"
+    [showValue]="true"
+    type="primary"
+    [value]="progress"
+    [max]="progressMax"
+  />
+  } @if (result && result.href && result.download) {
+  <div class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Download</th>
+          <th scope="col">Input Size</th>
+          <th scope="col">Output Size</th>
+          <th scope="col">Elapsed Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <a href="{{ result.href }}" download="{{ result.download }}">{{
+              result.download
+            }}</a>
+          </td>
+          <td>{{ result.inFileSize }}</td>
+          <td>{{ result.outFileSize }}</td>
+          <td>
+            <time
+              dateTime="PT{{ stripLeadingZeros(elapsedTime.split(':')[0]) }}H{{
+                stripLeadingZeros(elapsedTime.split(':')[1])
+              }}M{{
+                stripLeadingZeros(elapsedTime.split(':')[2].split('.')[0])
+              }}S"
+              >{{ elapsedTime }}</time
+            >
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  }
+</div>
