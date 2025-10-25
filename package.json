@@ -10,7 +10,7 @@
     "compress",
     "avif"
   ],
-  "author": "blathers16",
+  "author": "blathers16 <blathersbugs@gmail.com>",
   "license": "GPL-3.0-or-later",
   "scripts": {
     "ng": "ng",
