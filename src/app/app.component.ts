@@ -14,5 +14,5 @@ import { CyoaDownloaderComponent } from './cyoa-downloader/cyoa-downloader.compo
     styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  title = 'cyoa-json-downloader';
+  title = 'cyoa-downloader';
 }

@@ -22,29 +22,50 @@
 				"build": {
 					"builder": "@angular/build:application",
 					"options": {
+						"stylePreprocessorOptions": {
+							"sass": {
+								"silenceDeprecations": [
+									"mixed-decls",
+									"color-functions",
+									"global-builtin",
+									"import"
+								]
+							}
+						},
 						"outputPath": "dist/cyoa-json-downloader",
-            "index": "src/index.html",
+						"index": "src/index.html",
 						"polyfills": [
-							"zone.js"
+							"zone.js",
+							"@angular/localize/init"
 						],
 						"tsConfig": "tsconfig.app.json",
 						"assets": [
 							"src/favicon.ico",
-							"src/assets"
+							"src/assets",
+							{
+								"glob": "**/*.wasm",
+								"input": "node_modules/@jsquash/avif/codec/enc",
+								"output": "/assets/wasm/"
+							},
+							{
+								"glob": "**/*.wasm",
+								"input": "node_modules/@imagemagick/magick-wasm/dist",
+								"output": "/assets/wasm/"
+							}
 						],
 						"styles": [
 							"src/styles.scss"
 						],
-            "scripts": [],
-            "webWorkerTsConfig": "tsconfig.worker.json",
-            "browser": "src/main.ts"
+						"scripts": [],
+						"webWorkerTsConfig": "tsconfig.worker.json",
+						"browser": "src/main.ts"
 					},
 					"configurations": {
 						"production": {
 							"budgets": [
 								{
 									"type": "initial",
-									"maximumWarning": "500kb",
+									"maximumWarning": "900kb",
 									"maximumError": "1mb"
 								},
 								{
@@ -53,12 +74,12 @@
 									"maximumError": "4kb"
 								}
 							],
-              "outputHashing": "all"
+							"outputHashing": "all"
 						},
 						"development": {
 							"optimization": false,
 							"extractLicenses": false,
-              "sourceMap": true
+							"sourceMap": true
 						}
 					},
 					"defaultConfiguration": "production"
@@ -86,47 +107,53 @@
 					"options": {
 						"polyfills": [
 							"zone.js",
-							"zone.js/testing"
+							"zone.js/testing",
+							"@angular/localize/init"
 						],
 						"tsConfig": "tsconfig.spec.json",
 						"assets": [
 							"src/favicon.ico",
-							"src/assets"
+							"src/assets",
+							{
+								"glob": "**/*.wasm",
+								"input": "node_modules/",
+								"output": "/assets/wasm/"
+							}
 						],
 						"styles": [
 							"src/styles.scss"
 						],
-            "scripts": [],
-            "webWorkerTsConfig": "tsconfig.worker.json"
+						"scripts": [],
+						"webWorkerTsConfig": "tsconfig.worker.json"
 					}
 				}
 			}
 		}
-  },
-  "schematics": {
-    "@schematics/angular:component": {
-      "type": "component"
-    },
-    "@schematics/angular:directive": {
-      "type": "directive"
-    },
-    "@schematics/angular:service": {
-      "type": "service"
-    },
-    "@schematics/angular:guard": {
-      "typeSeparator": "."
-    },
-    "@schematics/angular:interceptor": {
-      "typeSeparator": "."
-    },
-    "@schematics/angular:module": {
-      "typeSeparator": "."
-    },
-    "@schematics/angular:pipe": {
-      "typeSeparator": "."
-    },
-    "@schematics/angular:resolver": {
-      "typeSeparator": "."
-    }
-  }
+	},
+	"schematics": {
+		"@schematics/angular:component": {
+			"type": "component"
+		},
+		"@schematics/angular:directive": {
+			"type": "directive"
+		},
+		"@schematics/angular:service": {
+			"type": "service"
+		},
+		"@schematics/angular:guard": {
+			"typeSeparator": "."
+		},
+		"@schematics/angular:interceptor": {
+			"typeSeparator": "."
+		},
+		"@schematics/angular:module": {
+			"typeSeparator": "."
+		},
+		"@schematics/angular:pipe": {
+			"typeSeparator": "."
+		},
+		"@schematics/angular:resolver": {
+			"typeSeparator": "."
+		}
+	}
 }

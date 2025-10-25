@@ -7,21 +7,38 @@
       <div ngbAccordionCollapse>
         <div ngbAccordionBody>
           <ng-template>
-            <h2>CYOA JSON Downloader</h2>
+            <h2>CYOA Downloader</h2>
             <p>
-              When pointed to the root of an interactive cyoa, this app downloads the project.json file,
-              fetches all images in the project.json, and embeds them in the project.json as data URLs.
+              When pointed to the root of an interactive cyoa, this app
+              downloads the project.json file, fetches all images in the
+              project.json, and embeds them in the project.json as data URLs. It
+              also downloads javascript, css, and html files in the CYOA and
+              optionally compresses the images in the CYOA to AVIF. The
+              resulting zip file should include everything you need to rehost
+              the cyoa elsewhere, including the exact same version of the viewer
+              used by the cyoa, so it will look exactly the same as it does
+              online.
             </p>
             <h4>Caveats</h4>
             <ul>
               <li>
-                only fetches images in an images folder as created by the intcyoa creator by default
+                fetches and embeds images or compresses the images if the
+                project file is named project.json.
               </li>
               <li>
-                only works if the json file is named project.json
+                if the images are already embedded, it will download the json
+                file and compress it, along with downloading the rest of the
+                website.
               </li>
               <li>
-                if the images are already embedded, it will still download the json file, but won't do anything else
+                It probably won't work if the author used relative paths that
+                are not relative to the site root.
+              </li>
+              <li>
+                It assumes that javascript, font, and css files that have
+                absolute urls are hosted on reliable CDNs and does not attempt
+                to download them. This is usually a safe assumption, but might
+                break things in the distant future.
               </li>
             </ul>
           </ng-template>
@@ -33,18 +50,26 @@
   <div class="my-4">
     <label for="cyoaURL" class="visually-hidden">URL to CYOA:</label>
     <div class="input-group">
-      <div class="input-group-text">URL to CYOA:</div>
+      <div class="input-group-text w-20">URL to CYOA:</div>
       <input
         type="text"
         class="form-control"
         id="cyoaURL"
-        [(ngModel)]="cyoaURL"
+        [(ngModel)]="cyoaURLString"
       />
     </div>
   </div>
-
   <div class="my-4">
-    <button type="submit" class="btn btn-primary" (click)="process()">Submit</button>
+    <label for="cyoaURL" class="visually-hidden">CYOA Save Name:</label>
+    <div class="input-group">
+      <div class="input-group-text w-20">Save Name:</div>
+      <input
+        type="text"
+        class="form-control"
+        id="cyoaURL"
+        [(ngModel)]="saveTitle"
+      />
+    </div>
   </div>
 
   @if (inProgress) {
@@ -55,14 +80,85 @@
     [value]="progress"
     [max]="progressMax"
   />
-  } @if (result && result.href && result.download) {
+  @if (doCompression) {
+  <ngb-progressbar
+    class="mb-3"
+    [showValue]="true"
+    type="info"
+    [value]="AVIFprogress"
+    [max]="AVIFprogressMax"
+  />
+  } }
+  <ng-template #qualityTip class="qualityTip">
+    lower values mean higher quality; try small changes to start
+  </ng-template>
+  <div class="mb-3 flex">
+    <label for="quality" class="form-label">cqLevel: {{ quality }}</label>
+    <input
+      type="range"
+      id="volume"
+      class="form-range"
+      name="quality"
+      min="0"
+      max="63"
+      [ngbTooltip]="qualityTip"
+      tooltipClass="my-custom-class"
+      #qualitySlider
+      [value]="quality"
+      (input)="setQuality(qualitySlider.value)"
+    />
+  </div>
+  <div class="d-flex justify-content-between">
+    <button type="button" class="btn my-button mb-3" (click)="setQuality('27')">
+      Reset Quality
+    </button>
+    <button type="button" class="btn my-button mb-3" (click)="resetURL()">
+      Clear URL
+    </button>
+  </div>
+  <div class="form-check">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      [(ngModel)]="doCompression"
+      (ngModelChange)="setDoCompression($event)"
+      id="doCompression"
+      checked
+    />
+    <label class="form-check-label" for="doCompression">
+      Compress JSON File?
+    </label>
+  </div>
+  <div class="form-check">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      [(ngModel)]="shouldSaveSeperateFiles"
+      (ngModelChange)="setSaveSeperateFiles($event)"
+      id="shouldSaveSeperateFiles"
+      checked
+    />
+    <label class="form-check-label" for="shouldSaveSeperateFiles">
+      Save Seperate Images?
+    </label>
+  </div>
+
+  <div class="my-4">
+    <button type="submit" class="btn btn-primary" (click)="process()">
+      Submit
+    </button>
+  </div>
+
+  @if (result && result.href && result.download) {
   <div class="table-container">
     <table class="table">
       <thead>
         <tr>
           <th scope="col">Download</th>
-          <th scope="col">Input Size</th>
-          <th scope="col">Output Size</th>
+          <th scope="col">project.json Input Size</th>
+          <th scope="col">project.json Output Size</th>
+          <th scope="col">project.json Compressed Size</th>
+          <th scope="col">Total CYOA Size</th>
           <th scope="col">Elapsed Time</th>
         </tr>
       </thead>
@@ -73,8 +169,10 @@
               result.download
             }}</a>
           </td>
-          <td>{{ result.inFileSize }}</td>
-          <td>{{ result.outFileSize }}</td>
+          <td>{{ result.jsonInFileSize }}</td>
+          <td>{{ result.jsonOutFileSize }}</td>
+          <td>{{ result.jsonCompressedSize }}</td>
+          <td>{{ result.cyoaTotalSize }}</td>
           <td>
             <time
               dateTime="PT{{ stripLeadingZeros(elapsedTime.split(':')[0]) }}H{{

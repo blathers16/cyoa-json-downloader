@@ -2,6 +2,8 @@ export interface DownloadData {
     href: string;
     download: string;
     innerText: string;
-    inFileSize: string;
-    outFileSize: string;
+    jsonInFileSize: string;
+    jsonOutFileSize: string;
+    jsonCompressedSize: string;
+    cyoaTotalSize: string;
 }
