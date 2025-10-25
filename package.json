@@ -1,7 +1,7 @@
 {
   "main": "electron/main.js",
   "name": "cyoa-downloader",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Tool for downloading interactive cyoas with embedded images (including viewer) and compressing to avif",
   "keywords": [
     "ICC",
@@ -17,7 +17,7 @@
     "start": "ng serve",
     "electron": "ng build --base-href . && electron .",
     "electron:dev": "start ng build  --base-href . --watch && start electron .",
-    "build": "ng build",
+    "build": "ng build  --base-href .",
     "watch": "ng build --watch",
     "serve": "npx http-server dist/cyoa-json-downloader/browser/",
     "test": "npm run copy:assets && ng test",
