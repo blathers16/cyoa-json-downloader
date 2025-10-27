@@ -10,14 +10,7 @@ import {
   NgbProgressbar,
   NgbTooltip,
 } from '@ng-bootstrap/ng-bootstrap';
-import {
-  Observable,
-  from,
-  map,
-  mergeAll,
-  reduce,
-  tap,
-} from 'rxjs';
+import { Observable, from, map, mergeAll, reduce, tap } from 'rxjs';
 
 import { DownloadData } from '../models/download-data';
 import { OrderedString } from '../models/ordered-string';
@@ -108,7 +101,7 @@ export class CyoaDownloaderComponent implements OnInit {
     if (!localStorage.getItem('saveSeperateFiles')) {
       localStorage.setItem('saveSeperateFiles', 'true');
     }
-    this.quality = parseInt(localStorage.getItem('quality') ?? '25')
+    this.quality = parseInt(localStorage.getItem('quality') ?? '25');
     this.doCompression =
       localStorage.getItem('compress') == 'true' ? true : false;
     this.shouldSaveSeperateFiles =
@@ -146,7 +139,7 @@ export class CyoaDownloaderComponent implements OnInit {
 
   setQuality(s: string): void {
     const n = Number(s);
-    localStorage.setItem('quality', s)
+    localStorage.setItem('quality', s);
     this.quality = n;
   }
 
@@ -319,7 +312,7 @@ export class CyoaDownloaderComponent implements OnInit {
     // download the project.json if it exists
     let jsonBlob = await fetch(new URL('project.json', this.cyoaURL)).then(
       async (r) => {
-        if (r.ok) {
+        if (r.ok && r.headers.get('Content-Type') === 'application/json') {
           return await r.blob();
         } else {
           return null;
@@ -328,10 +321,10 @@ export class CyoaDownloaderComponent implements OnInit {
     );
 
     // download the project.json if it exists
-    let project: Project = await fetch(
+    let project: Project | null = await fetch(
       new URL('project.json', this.cyoaURL)
     ).then(async (r) => {
-      if (r.ok) {
+      if (r.ok && r.headers.get('Content-Type') === 'application/json') {
         return await r.json();
       } else {
         return null;
@@ -339,8 +332,11 @@ export class CyoaDownloaderComponent implements OnInit {
     });
 
     let jsonFile: File | null = null;
-    if (jsonBlob) {
-      this.saveTitle = project.rows[0].title;
+    if (jsonBlob && project) {
+      if (this.saveTitle === '') {
+        this.saveTitle = project.rows[0].title;
+      }
+
       jsonFile = new File([jsonBlob], 'project.json', {
         type: 'application/json',
       });
@@ -401,7 +397,6 @@ export class CyoaDownloaderComponent implements OnInit {
         )
         .subscribe(async (fetchedFiles: OrderedString[]) => {
           if (!this.doCompression && this.shouldSaveSeperateFiles) {
-            console.log('seperating files');
             fetchedFiles = (await saveSeperateFiles(
               fetchedFiles,
               this.cyoaFiles
@@ -422,7 +417,6 @@ export class CyoaDownloaderComponent implements OnInit {
             type: jsonFile.type,
           });
           if (this.doCompression) {
-            console.log('compressing');
             await this.convert(JsonOutFile)
               .pipe(
                 // update progressbar
