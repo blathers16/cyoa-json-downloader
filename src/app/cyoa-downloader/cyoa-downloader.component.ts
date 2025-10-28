@@ -23,6 +23,7 @@ import {
   isImageURL,
   DATAURLINCLUDINGAVIF,
   IMAGEURL,
+  isJSONFileName,
 } from '../utilities/regex';
 
 import { formatSize, makeZipFile } from '../utilities/utils';
@@ -78,6 +79,8 @@ export class CyoaDownloaderComponent implements OnInit {
   doCompression: boolean = true;
 
   shouldSaveSeperateFiles: boolean = true;
+
+  jsonFileName: string = 'project.json';
 
   setSaveSeperateFiles(shouldSaveSeperateFiles: boolean): void {
     localStorage.setItem(
@@ -309,8 +312,46 @@ export class CyoaDownloaderComponent implements OnInit {
     // start timer
     const startTime: number = performance.now();
 
+    // download the index.html file, webserver should redirect from /
+    let indexBlob = await fetch(this.cyoaURL).then(async (r) => await r.blob());
+
+    const indexFile = new File([indexBlob], 'index.html', {
+      type: 'text/html',
+    });
+
+    if (!indexFile) {
+      return;
+    }
+
+    await parseFilesRecursive(
+      indexFile,
+      this.cyoaURL,
+      this.cyoaFiles,
+      this.cyoaFileNames
+    );
+
+    // revoke any references to previously compressed
+    // CYOAs to free memory
+    if (this.result?.href) {
+      URL.revokeObjectURL(this.result.href);
+    }
+
+    if (
+      this.cyoaFileNames.some((fileName: string) => isJSONFileName(fileName))
+    ) {
+      this.jsonFileName =
+        this.cyoaFileNames.filter(
+          (fileName: string) =>
+            isJSONFileName(fileName) && fileName !== 'project.json'
+        ).length == 1
+          ? this.cyoaFileNames.filter(
+              (fileName: string) =>
+                isJSONFileName(fileName) && fileName !== 'project.json'
+            )[0]
+          : 'project.json';
+    }
     // download the project.json if it exists
-    let jsonBlob = await fetch(new URL('project.json', this.cyoaURL)).then(
+    let jsonBlob = await fetch(new URL(this.jsonFileName, this.cyoaURL)).then(
       async (r) => {
         if (r.ok && r.headers.get('Content-Type') === 'application/json') {
           return await r.blob();
@@ -322,7 +363,7 @@ export class CyoaDownloaderComponent implements OnInit {
 
     // download the project.json if it exists
     let project: Project | null = await fetch(
-      new URL('project.json', this.cyoaURL)
+      new URL(this.jsonFileName, this.cyoaURL)
     ).then(async (r) => {
       if (r.ok && r.headers.get('Content-Type') === 'application/json') {
         return await r.json();
@@ -337,39 +378,16 @@ export class CyoaDownloaderComponent implements OnInit {
         this.saveTitle = project.rows[0].title;
       }
 
-      jsonFile = new File([jsonBlob], 'project.json', {
+      jsonFile = new File([jsonBlob], this.jsonFileName, {
         type: 'application/json',
       });
-      this.cyoaFileNames.push('project.json');
-    }
-
-    // download the index.html file, webserver should redirect from /
-    let indexBlob = await fetch(this.cyoaURL).then(async (r) => await r.blob());
-
-    const indexFile = new File([indexBlob], 'index.html', {
-      type: 'text/html',
-    });
-
-    if (!indexFile) {
-      return;
-    }
-
-    await new Promise<void>((resolve, reject) => {
-      parseFilesRecursive(
-        indexFile,
-        this.cyoaURL,
-        this.cyoaFiles,
-        this.cyoaFileNames
-      ).subscribe({
-        complete: resolve,
-        error: reject,
-      });
-    });
-
-    // revoke any references to previously compressed
-    // CYOAs to free memory
-    if (this.result?.href) {
-      URL.revokeObjectURL(this.result.href);
+      if (
+        this.cyoaFileNames.every(
+          (fileName: string) => fileName !== this.jsonFileName
+        )
+      ) {
+        this.cyoaFileNames.push('project.json');
+      }
     }
 
     this.result = null;
@@ -402,14 +420,35 @@ export class CyoaDownloaderComponent implements OnInit {
               this.cyoaFiles
             )) as OrderedString[];
           }
-          // these arrive in whatever order they convert in, so we need to sort them
-          fetchedFiles.sort(this.sortResults);
-          // remove the annotation used for sorting
-          const withoutIndices: string[] = fetchedFiles.map(
-            (x: OrderedString) => x.s
-          );
-          // join to a single string
-          const fileString: string = withoutIndices.join('');
+
+          // variable to hold the joined json
+          let fileString: string;
+          // handle CYOAs too big for embeded images
+          try {
+            // remove the annotation used for sorting
+            const withoutIndices: string[] = fetchedFiles.map(
+              (x: OrderedString) => x.s
+            );
+            // these arrive in whatever order they convert in, so we need to sort them
+            fetchedFiles.sort(this.sortResults);
+            // join into a single string
+            fileString = withoutIndices.join('');
+            // RangeError, string it too big to combine,
+            // split images
+          } catch {
+            fetchedFiles = (await saveSeperateFiles(
+              fetchedFiles,
+              this.cyoaFiles
+            )) as OrderedString[];
+            // these arrive in whatever order they convert in, so we need to sort them
+            fetchedFiles.sort(this.sortResults);
+            // remove the annotation used for sorting
+            const withoutIndices: string[] = fetchedFiles.map(
+              (x: OrderedString) => x.s
+            );
+            // join into a single string
+            fileString = withoutIndices.join('');
+          }
           // convert to a blob
           const blob = new Blob([fileString], { type: jsonFile.type });
           // and create a file
@@ -452,7 +491,7 @@ export class CyoaDownloaderComponent implements OnInit {
                 const CompressedJsonFile = createFileFromString(
                   fileString,
                   JsonOutFile.type,
-                  'project.json'
+                  this.jsonFileName
                 );
 
                 await this.displayFile(

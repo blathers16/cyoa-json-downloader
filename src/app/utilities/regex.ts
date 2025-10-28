@@ -23,13 +23,14 @@ export const isWEBFILEURL = (s: string) =>
   s.match(
     /^((?:href=|src=|href: basePath \+ '|src: basePath \+ ')\"?\.?[A-Za-z0-9-._~:/?#\[\]@!$&'()*+,;%=]+\.(?:ttf|eot|woff2?|css|js|html))$/i
   ) && true;
-
 // match image dataURLs (with AVIF)
 export const isDataURLIncludingAvif = (s: string) =>
   s.match(
     '^(["\'`]data:image/(?:j?pe?n?g|webp|gif|avif);base64,[a-zA-Z0-9+/]+={0,2}["\'`])$'
   ) && s[0] == s.slice(-1);
-
+export const isJSONFileName = (s: string) =>
+  s.match("^((?:[a-zA-Z0-9-._~]|[!$&'()*+,;=:@]|%[0-9a-fA-F]{2})+.json)$") &&
+  true;
 // dataURL mime header
 export const MIME = RegExp('image/([a-z]+)');
 // regex for finding data image dataURLs
@@ -42,3 +43,7 @@ export const IMAGEURL =
   /(["'`]images\/[A-Za-z0-9_-]+\.(?:png|jpe?g|gif|bmp|webp|svg|avif)["'`]|["'`]https?:\/\/(?:www\.)?[A-Za-z0-9-._~:/?#\[\]@!$&'()*+,;%=]+\.(?:png|jpe?g|gif|bmp|webp|svg)["'`])/gi;
 export const WEBFILEURL =
   /((?:href=|src=|href: basePath \+ '|src: basePath \+ ')\"?\.?[A-Za-z0-9-._~:/?#\[\]@!$&'()*+,;%=]+\.(?:ttf|eot|woff2?|css|js|html))/gi;
+export const JSONFILENAME =
+  /(["'`](?:[a-zA-Z0-9\-._~]|[!$&'()*+,;=:@]|%[0-9a-fA-F]{2})+\.json["'`])/gi;
+export const WEBFILEURLORJSONFILENAME =
+  /((?:href=|src=|href: basePath \+ '|src: basePath \+ ')\"?\.?[A-Za-z0-9-._~:/?#\[\]@!$&'()*+,;%=]+\.(?:ttf|eot|woff2?|css|js|html))|(["'`](?:[a-zA-Z0-9\-._~]|[!$&'()*+,;=:@]|%[0-9a-fA-F]{2})+\.json["'`])/gi;

@@ -13,7 +13,11 @@ import { encode as b64encode } from 'base64-arraybuffer';
 import { CompressionString } from '../models/compression-string';
 import { isDataURL, isDataURLIncludingAvif } from '../utilities/regex';
 import { fixMime, isAnimatedWebp, isGif, isWebp } from '../utilities/dataURLs';
-import { copyUint8Array, isGifAnimated, Uint8ToBase64 } from '../utilities/utils';
+import {
+  copyUint8Array,
+  isGifAnimated,
+  Uint8ToBase64,
+} from '../utilities/utils';
 
 export class CompressorWorker
   implements DoWorkUnit<CompressionString, CompressionString>

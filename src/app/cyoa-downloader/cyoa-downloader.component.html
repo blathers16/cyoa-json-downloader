@@ -22,8 +22,10 @@
             <h4>Caveats</h4>
             <ul>
               <li>
-                fetches and embeds images or compresses the images if the
-                project file is named project.json.
+                <del>
+                  fetches and embeds images or compresses the images if the
+                  project file is named project.json.</del
+                >
               </li>
               <li>
                 if the images are already embedded, it will download the json
@@ -39,6 +41,76 @@
                 absolute urls are hosted on reliable CDNs and does not attempt
                 to download them. This is usually a safe assumption, but might
                 break things in the distant future.
+              </li>
+            </ul>
+            <h3>2.0 Release</h3>
+            <ul>
+              <li>
+                Now downloads the whole CYOA, not just the project.json file.
+              </li>
+              <li>Option to compress images.</li>
+              <li>Option to save images as seperate files.</li>
+              <li>Now embeds external URLs.</li>
+              <li>
+                Now saves some settings to localstorage. (Compress Images and
+                Save Seperate Images).
+              </li>
+              <li>
+                Project will now attempt to set the title of the downloaded zip
+                archive using the following heuristic:
+                <ol>
+                  <li>A title manually input by the user.</li>
+                  <li>The title of the first row in the project.json.</li>
+                  <li>
+                    The last path segment of the URL. ex:
+                    bob.neocities.org/cyoas/<b>SomeCyoa</b>/
+                  </li>
+                  <li>
+                    The subdomain of the URL. ex: <b>bobscyoa</b>.neocities.org
+                  </li>
+                  <li>cyoa.zip</li>
+                </ol>
+              </li>
+            </ul>
+            <h3>2.1 Release</h3>
+            <ul>
+              <li>Refactor code.</li>
+              <li>Correct Mime Types if possible.</li>
+              <li>Save Quality to localstorage.</li>
+              <li>Default Quality is now 25, increased from 27.</li>
+              <li>
+                Rename Quality to cqLevel, as that is the acutal option in the
+                AVIF library, and will hopefully reduce confusion about the
+                setting.
+              </li>
+              <li>Remove unneeded SCSS code.</li>
+              <li>
+                Fixed bug where dataURLs in project.json were not saved as
+                seperate images, only images fetched from external URLs were
+                being saved as seperate images previously.
+              </li>
+            </ul>
+
+            <h3>2.2 (unreleased)</h3>
+            <ul>
+              <li>Fix manual save name input.</li>
+              <li>
+                Handle routing redirects for project.json (ie ones that return
+                index.html with a 200 response by checking response type).
+              </li>
+            </ul>
+            <h3>2.3 Release</h3>
+            <ul>
+              <li>
+                Now fetches json files with different names. If the project is
+                embedded into the javascript file, it will fetch the javascript
+                file, so the CYOA will work, but the other functionality of this
+                app will not work (embedding external urls, compressing images
+                etc)
+              </li>
+              <li>
+                Fixed possible race condition where app did not wait for all
+                files to be downloaded before processing JSON file.
               </li>
             </ul>
           </ng-template>

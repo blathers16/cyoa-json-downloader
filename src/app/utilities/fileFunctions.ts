@@ -1,18 +1,12 @@
-import {
-  catchError,
-  concatMap,
-  EMPTY,
-  filter,
-  from,
-  lastValueFrom,
-  map,
-  mergeMap,
-  Observable,
-  toArray,
-} from 'rxjs';
+import { concatMap, from, lastValueFrom, toArray } from 'rxjs';
 import { CompressionString } from '../models/compression-string';
 import { OrderedString } from '../models/ordered-string';
-import { isDataURLIncludingAvif, isWEBFILEURL, WEBFILEURL } from './regex';
+import {
+  isDataURLIncludingAvif,
+  isJSONFileName,
+  isWEBFILEURL,
+  WEBFILEURLORJSONFILENAME,
+} from './regex';
 import { getDeclaredMimeType, getExtensionFromDataURL } from './dataURLs';
 
 // saves the images in the project.json as seperate files
@@ -61,109 +55,76 @@ export const dataURLtoFile: Function = async (
   return new File([blob], filename, { type: mime! });
 };
 
-export const fetchFile: Function = async (
+export const fetchFile = async (
   url: string,
   cyoaURL: URL,
   cyoaFiles: File[],
   cyoaFileNames: string[]
-): Promise<null> => {
-  if (url.startsWith('href=')) {
-    url = url.substring(5);
-  } else if (url.startsWith('src=')) {
-    url = url.substring(4);
-    // custom for ICC2
-  } else if (url.startsWith("href: basePath + '")) {
-    url = url.substring(18);
-    // custom for ICC2
-  } else if (url.startsWith("src: basePath + '")) {
-    url = url.substring(17);
-  }
-  if (url.startsWith('"')) {
-    url = url.substring(1);
-  }
-  // don't pull stuff from CDNs
-  if (url.startsWith('http')) {
-    return null;
-  }
-  // remove ., it breaks URLs
-  if (url.startsWith('.')) {
-    url = url.substring(1);
-  }
+): Promise<void> => {
+  // --- clean the URL ---
+  if (url.startsWith('href=')) url = url.substring(5);
+  else if (url.startsWith('src=')) url = url.substring(4);
+  else if (url.startsWith("href: basePath + '")) url = url.substring(18);
+  else if (url.startsWith("src: basePath + '")) url = url.substring(17);
+  if (url.startsWith('"')) url = url.substring(1);
+  if (url.startsWith('http')) return; // skip external URLs
+  if (url.startsWith('.')) url = url.substring(1);
 
-  // if the file is already in the zip archive
-  if (cyoaFileNames.some((x: string) => x == url)) {
-    // don't process it again
-    return null;
-  }
+  // --- skip already-processed or base files ---
+  if (cyoaFileNames.includes(url)) return;
+  if (url === 'project.json' || url === 'index.html') return;
   cyoaFileNames.push(url);
-  // these files are already processed, even though their
-  // names are not in the name array
-  if (url == 'project.json' || url == 'index.html') {
-    return null;
-  }
-  let blob = await fetch(
+
+  // --- fetch the file ---
+  const response = await fetch(
     new URL(
-      `${cyoaURL!.pathname !== '/' ? cyoaURL!.pathname : ''}${url}`,
-      cyoaURL!
+      `${cyoaURL.pathname !== '/' ? cyoaURL.pathname : ''}${url}`,
+      cyoaURL
     )
-  ).then(async (r) => {
-    if (r.ok) {
-      return await r.blob();
-    } else {
-      return null;
-    }
-  });
+  );
 
-  if (blob === null) {
-    return null;
-  }
+  if (!response.ok) return;
 
-  const file = new File([blob], url ? url : 'index.html', {
-    type: blob.type,
-  });
-  // recurse here
-  await new Promise<void>((resolve, reject) => {
-    parseFilesRecursive(file, cyoaURL, cyoaFiles, cyoaFileNames).subscribe({
-      complete: resolve,
-      error: reject,
-    });
-  });
-  return null;
+  const blob = await response.blob();
+  const file = new File([blob], url || 'index.html', { type: blob.type });
+
+  // --- recursively parse the fetched file ---
+  await parseFilesRecursive(file, cyoaURL, cyoaFiles, cyoaFileNames);
 };
 
-export const parseFilesRecursive: Function = (
+export const parseFilesRecursive = async (
   infile: File,
   cyoaURL: URL,
   cyoaFiles: File[],
   cyoaFileNames: string[]
-): Observable<void> => {
-  // Start with the current file
+): Promise<void> => {
   cyoaFiles.push(infile);
+  const text = await infile.text();
 
-  return from(infile.text()).pipe(
-    // Extract all web file URLs
-    map((text: string) => text.match(WEBFILEURL) ?? []),
-    mergeMap((urls: string[]) => from(urls)),
-    // Only keep valid URLs
-    filter((url: string) => isWEBFILEURL(url) == true),
-    // Fetch URL (fetchFile returns Promise<void>)
-    mergeMap((url: string) =>
-      from(fetchFile(url, cyoaURL, cyoaFiles, cyoaFileNames)).pipe(
-        catchError(() => EMPTY),
-        mergeMap(() => {
-          return EMPTY; // nothing to do
-        })
-      )
-    )
-  );
+  // --- find all URLs ---
+  const urls = text.match(WEBFILEURLORJSONFILENAME) ?? [];
+
+  for (const url of urls) {
+    if (isJSONFileName(url.slice(1, -1))) {
+      cyoaFileNames.push(url.slice(1, -1));
+    }
+
+    if (isWEBFILEURL(url)) {
+      await fetchFile(url, cyoaURL, cyoaFiles, cyoaFileNames);
+    }
+  }
 };
 
-  export const createFileFromString: Function = (fileString: string, type: string, name: string): File => {
-    // convert string to blob
-    const blob = new Blob([fileString], { type: type });
-    // and create a file
-    const file = new File([blob], name, {
-      type,
-    });
-    return file;
-  }
+export const createFileFromString: Function = (
+  fileString: string,
+  type: string,
+  name: string
+): File => {
+  // convert string to blob
+  const blob = new Blob([fileString], { type: type });
+  // and create a file
+  const file = new File([blob], name, {
+    type,
+  });
+  return file;
+};
