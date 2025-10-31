@@ -353,7 +353,7 @@ export class CyoaDownloaderComponent implements OnInit {
     // download the project.json if it exists
     let jsonBlob = await fetch(new URL(this.jsonFileName, this.cyoaURL)).then(
       async (r) => {
-        if (r.ok && r.headers.get('Content-Type') === 'application/json') {
+        if (r.ok && r.headers.get('Content-Type')?.includes('application/json')) {
           return await r.blob();
         } else {
           return null;
@@ -365,7 +365,7 @@ export class CyoaDownloaderComponent implements OnInit {
     let project: Project | null = await fetch(
       new URL(this.jsonFileName, this.cyoaURL)
     ).then(async (r) => {
-      if (r.ok && r.headers.get('Content-Type') === 'application/json') {
+      if (r.ok && r.headers.get('Content-Type')?.includes('application/json')) {
         return await r.json();
       } else {
         return null;
@@ -425,12 +425,12 @@ export class CyoaDownloaderComponent implements OnInit {
           let fileString: string;
           // handle CYOAs too big for embeded images
           try {
+            fetchedFiles.sort(this.sortResults);
             // remove the annotation used for sorting
             const withoutIndices: string[] = fetchedFiles.map(
               (x: OrderedString) => x.s
             );
             // these arrive in whatever order they convert in, so we need to sort them
-            fetchedFiles.sort(this.sortResults);
             // join into a single string
             fileString = withoutIndices.join('');
             // RangeError, string it too big to combine,
