@@ -65,13 +65,30 @@
     "typescript": "~5.8.3"
   },
   "build": {
-    "appId": "com.blath16.cyoajsondownloader",
+    "appId": "io.github.blathers16.cyoa-json-downloader",
     "files": [
       "dist/cyoa-json-downloader/browser/**/*",
       "electron/**/*"
     ],
     "directories": {
-      "buildResources": "assets"
+      "buildResources": "src/assets"
+    },
+    "icon": "512x512.png",
+    "linux": {
+      "icon": "icon.png",
+      "category": "Utility"
+    },
+    "flatpak": {
+      "base": "org.electronjs.Electron2.BaseApp",
+      "baseVersion": "25.08",
+      "runtime": "org.freedesktop.Platform",
+      "runtimeVersion": "25.08",
+      "sdk": "org.freedesktop.Sdk",
+      "finishArgs": [
+        "--socket=x11",
+        "--filesystem=home",
+        "--share=network"
+      ]
     }
   }
 }
