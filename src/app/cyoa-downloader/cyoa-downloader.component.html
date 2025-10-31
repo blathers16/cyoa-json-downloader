@@ -113,6 +113,33 @@
                 files to be downloaded before processing JSON file.
               </li>
             </ul>
+
+            <h3>2.3</h3>
+            <ul>
+              <li>
+                Now fetches JSON files with different names. If the project is
+                embedded into the javascript file, it will fetch the javascript
+                file, so the CYOA will work, but the other functionality of this
+                app will not work (embedding external urls, compressing images
+                etc)
+              </li>
+              <li>
+                Fixed possible race condition where app did not wait for all
+                files to be downloaded before processing JSON file.
+              </li>
+            </ul>
+            <h3>2.4</h3>
+            <ul>
+              <li>
+                Fixed bug where the split project file was sorted after the
+                sorting annotations were already removed, resulting in the
+                project file being joined together in random order.
+              </li>
+              <li>
+                Fix for Content-Type header of project file being returned with
+                charset as well as mime type.
+              </li>
+            </ul>
           </ng-template>
         </div>
       </div>
