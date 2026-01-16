@@ -24,6 +24,8 @@ import {
   DATAURLINCLUDINGAVIF,
   IMAGEURL,
   isJSONFileName,
+  ANYDATAURL,
+  isANYDATAURL,
 } from '../utilities/regex';
 
 import { formatSize, makeZipFile } from '../utilities/utils';
@@ -32,6 +34,7 @@ import {
   parseFilesRecursive,
   saveSeperateFiles,
 } from '../utilities/fileFunctions';
+import { fixMime } from '../utilities/dataURLs';
 
 @Component({
   selector: 'app-cyoa-downloader',

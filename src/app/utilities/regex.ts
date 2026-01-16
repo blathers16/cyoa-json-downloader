@@ -13,6 +13,13 @@ export const isAbsoluteImageURL = (s: string) =>
   s.match(
     /^(["'`]https?:\/\/(?:www\.)?[^"'\s]+\.(?:png|jpe?g|gif|bmp|webp|svg)["'`])$/i
   ) && s[0] == s.slice(-1);
+
+// match any dataURL (including non images)
+export const isANYDATAURL = (s: string) => 
+  s.match(
+    /^(["'`]data:(?:(?:application|audio|chemical|font|image|message|model|text|video|x-conference)\/[a-z0-9\.\-\+]+|gcode);base64,[a-zA-Z0-9+/]+={0,2}["'`])$/i
+  ) && s[0] == s.slice(-1);
+
 // match image dataURLs (without AVIF)
 export const isDataURL = (s: string) =>
   s.match(
@@ -35,6 +42,8 @@ export const isJSONFileName = (s: string) =>
 export const MIME = RegExp('image/([a-z]+)');
 // regex for finding data image dataURLs
 // currently setup to find jpeg, jpg, png, webp, and gif
+export const ANYDATAURL = 
+  /(["'`]data:(?:(?:application|audio|chemical|font|image|message|model|text|video|x-conference)\/[a-z0-9\.\-\+]+|gcode);base64,[a-zA-Z0-9+/]+={0,2}["'`])/gi;
 export const DATAURL =
   /(["'`]data:image\/(?:j?pe?n?g|webp|gif);base64,[a-zA-Z0-9+/]+={0,2}["'`])/gi;
 export const DATAURLINCLUDINGAVIF =

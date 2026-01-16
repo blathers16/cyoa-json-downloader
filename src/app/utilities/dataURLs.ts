@@ -4,7 +4,10 @@ export const getExtensionFromDataURL: Function = (dataUrl: string): string => {
 };
 
 export const getDeclaredMimeType: Function = (dataUrl: string) => {
-  const match = dataUrl.slice(1, -1).match(/^data:([a-z\/]+);/);
+  if (!dataUrl.startsWith('data:')) {
+    dataUrl = dataUrl.slice(1,-1)
+  }
+  const match = dataUrl.match(/^data:([a-z\/\-\+0-9\.]+);/);
   return match ? match[1] : null;
 };
 
@@ -35,8 +38,8 @@ export const getActualMimeType: Function = (dataUrl: string) => {
       return 'image/webp';
     }
     // Check for AVIF (ftypavif)
-    if (view.getUint32(4) === 0x66747970 && view.getUint32(8) === 0x61766966) {
-      return 'image/avif';
+    if (isAvifMIME(bytes)) {
+      return "image/avif";
     }
 
     return 'unknown';
@@ -49,12 +52,18 @@ export const getActualMimeType: Function = (dataUrl: string) => {
 // should detect and correct header on
 // misidentified webp and gif images
 export const fixMime: Function = (dataURL: string): string => {
-  const qt = dataURL.slice(0, 1);
-  dataURL = dataURL.slice(1, -1);
+  let qt;
+  if (!dataURL.startsWith('data:')) {
+    qt = dataURL.slice(0, 1);
+    dataURL = dataURL.slice(1, -1);
+  } else {
+    qt = '';
+  }
 
   const declaredMime = getDeclaredMimeType(dataURL);
   const actualMime = getActualMimeType(dataURL);
-
+  console.log(actualMime)
+  console.log(declaredMime)
   if (
     declaredMime &&
     declaredMime !== actualMime &&
@@ -66,6 +75,46 @@ export const fixMime: Function = (dataURL: string): string => {
     return `${qt}${dataURL}${qt}`;
   }
 };
+
+function isAvifMIME(bytes: Uint8Array): boolean {
+  if (bytes.length < 32) return false; // minimum for ftyp box safety
+
+  const view = new DataView(bytes.buffer);
+
+  // Check box type: bytes 4..7 must be "ftyp"
+  const boxType =
+    String.fromCharCode(
+      view.getUint8(4),
+      view.getUint8(5),
+      view.getUint8(6),
+      view.getUint8(7)
+    );
+
+  if (boxType !== "ftyp") return false;
+
+  const decodeBrand = (offset: number) =>
+    String.fromCharCode(
+      view.getUint8(offset),
+      view.getUint8(offset + 1),
+      view.getUint8(offset + 2),
+      view.getUint8(offset + 3)
+    );
+
+  const avifBrands = new Set(["avif", "avis", "avio", "mif1", "msf1"]);
+
+  // major brand at bytes 8..11
+  const majorBrand = decodeBrand(8);
+  if (avifBrands.has(majorBrand)) return true;
+
+  // minor version (bytes 12..15) — skip these
+  // compatible brands start at byte 16
+  for (let offset = 16; offset + 4 <= bytes.length; offset += 4) {
+    const brand = decodeBrand(offset);
+    if (avifBrands.has(brand)) return true;
+  }
+
+  return false;
+}
 
 export const isWebp: Function = (dataUrl: string): boolean => {
   // 1. Check if the URL starts with "data:".

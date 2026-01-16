@@ -8,6 +8,7 @@ import {
   isImageURL,
   isRelativeImageURL,
 } from '../utilities/regex';
+import { fixMime } from '../utilities/dataURLs';
 
 export class ImageDownloadWorker
   implements DoWorkUnit<OrderedString, OrderedString>
@@ -36,6 +37,9 @@ export class ImageDownloadWorker
         reader.readAsDataURL(blob);
       });
       if (dataUrl) {
+        // console.log(dataUrl)
+        dataUrl = fixMime(dataUrl);
+        // console.log(dataUrl)
         return { s: `"${dataUrl}"`, index, url };
       } else {
         return st;
